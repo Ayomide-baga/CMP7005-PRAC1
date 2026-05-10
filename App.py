@@ -279,7 +279,8 @@ elif page == "Dataset Explorer":
 # VISUALISATION
 # ============================================================
 elif page == "Visualisation":
-    st.title("Visualisation")
+    st.title("📈 Visualisation")
+    st.info("💡 Select a visualisation type from the dropdown below to explore different aspects of the Beijing air quality dataset.")
     
     viz_type = st.selectbox("Select Visualisation Type:", [
         "Pollutant Distributions",
@@ -292,7 +293,8 @@ elif page == "Visualisation":
     ])
     
     if viz_type == "Pollutant Distributions":
-        st.markdown("### Pollutant Distributions")
+        st.markdown("### 🌫️ Pollutant Distributions")
+        st.info("💡 Histogram showing the frequency distribution of the selected pollutant across Urban and Suburban stations. Overlapping bars reveal differences in pollution exposure between station types.")
         selected_pol = st.selectbox("Select Pollutant:", pollutants)
         
         fig = px.histogram(df, x=selected_pol, color='station_type',
@@ -308,7 +310,8 @@ elif page == "Visualisation":
         col4.metric("Max", f"{df[selected_pol].max():.2f}")
     
     elif viz_type == "Urban vs Suburban Comparison":
-        st.markdown("### Urban vs Suburban Comparison")
+        st.markdown("### 🏙️ Urban vs Suburban Comparison")
+        st.info("💡 Box plots showing the spread and median of the selected pollutant across all four stations, grouped by station type. The box represents the interquartile range, and whiskers show the data range excluding outliers.")
         selected_pol = st.selectbox("Select Pollutant:", pollutants)
         
         fig = px.box(df, x='station', y=selected_pol, color='station_type',
@@ -320,7 +323,8 @@ elif page == "Visualisation":
         st.dataframe(comparison, use_container_width=True)
     
     elif viz_type == "Scatter Plot Explorer":
-        st.markdown("### Scatter Plot Explorer")
+        st.markdown("### 🔵 Scatter Plot Explorer")
+        st.info("💡 Explore relationships between any two variables. Each point represents one hourly reading. The OLS trendline shows the overall linear relationship — a steeper line indicates a stronger correlation.")
         col1, col2 = st.columns(2)
         with col1:
             x_var = st.selectbox("X-axis:", pollutants + met_vars, index=6)
@@ -335,7 +339,8 @@ elif page == "Visualisation":
         st.plotly_chart(fig, use_container_width=True)
     
     elif viz_type == "Correlation Heatmap":
-        st.markdown("### Correlation Heatmap")
+        st.markdown("### 🔥 Correlation Heatmap")
+        st.info("💡 Pearson correlation coefficients between all pollutants and meteorological variables. Values close to +1 (dark red) indicate strong positive correlation, values close to -1 (dark blue) indicate strong negative correlation, and values near 0 indicate no linear relationship.")
         
         station_filter = st.selectbox("Filter by:", ["All Stations", "Urban Only", "Suburban Only"])
         
@@ -355,7 +360,8 @@ elif page == "Visualisation":
         st.pyplot(fig)
     
     elif viz_type == "Temporal Trends":
-        st.markdown("### Temporal Trends")
+        st.markdown("### 📅 Temporal Trends")
+        st.info("💡 Monthly average concentrations over the full 4-year period (top) and average hourly patterns within a day (bottom). Use these to identify seasonal peaks and daily pollution cycles.")
         selected_pol = st.selectbox("Select Pollutant:", pollutants)
         
         monthly = df.groupby([df.index.to_period('M'), 'station_type'])[selected_pol].mean().reset_index()
@@ -368,7 +374,6 @@ elif page == "Visualisation":
         fig.update_xaxes(tickangle=45, dtick=3)
         st.plotly_chart(fig, use_container_width=True)
         
-        # Diurnal pattern
         hourly = df.groupby(['hour', 'station_type'])[selected_pol].mean().reset_index()
         fig2 = px.line(hourly, x='hour', y=selected_pol, color='station_type',
                        title=f'Diurnal {selected_pol} Pattern',
@@ -377,7 +382,8 @@ elif page == "Visualisation":
         st.plotly_chart(fig2, use_container_width=True)
     
     elif viz_type == "Seasonal Comparison":
-        st.markdown("### Seasonal Comparison")
+        st.markdown("### 🌸 Seasonal Comparison")
+        st.info("💡 Average pollutant concentrations grouped by season and station type. Winter typically shows higher pollution due to heating emissions and stable atmospheric conditions trapping pollutants near the surface.")
         selected_pol = st.selectbox("Select Pollutant:", pollutants)
         
         season_order = ['Spring', 'Summer', 'Autumn', 'Winter']
@@ -391,29 +397,31 @@ elif page == "Visualisation":
         st.plotly_chart(fig, use_container_width=True)
     
     elif viz_type == "AQI Distribution by Station":
-        st.markdown("### AQI Distribution by Station")
+        st.markdown("### 🏭 AQI Distribution by Station")
+        st.info("💡 Stacked bar chart showing the percentage of hourly readings in each AQI category per station. Stations with more green indicate better overall air quality, while more red/purple indicates worse pollution levels.")
         
         aqi_order = ['Excellent', 'Good', 'Lightly Polluted', 'Moderately Polluted',
                      'Heavily Polluted', 'Severely Polluted']
+        
         aqi_counts = df.groupby(['station', 'AQI_level']).size().reset_index(name='count')
         aqi_totals = aqi_counts.groupby('station')['count'].transform('sum')
         aqi_counts['percentage'] = aqi_counts['count'] / aqi_totals * 100
         aqi_counts['AQI_level'] = pd.Categorical(aqi_counts['AQI_level'], 
-                                              categories=aqi_order, ordered=True)
+                                                  categories=aqi_order, ordered=True)
         aqi_counts = aqi_counts.sort_values('AQI_level')
-
+        
         fig = px.bar(aqi_counts, x='station', y='percentage', color='AQI_level',
-                 title='AQI Category Distribution by Station (%)',
-                 labels={'percentage': 'Percentage (%)', 'station': 'Station'},
-                 color_discrete_map={
-                     'Excellent': '#00e400',
-                     'Good': '#ffff00',
-                     'Lightly Polluted': '#ff7e00',
-                     'Moderately Polluted': '#ff0000',
-                     'Heavily Polluted': '#8f3f97',
-                     'Severely Polluted': '#7e0023'
-                 },
-                 category_orders={'AQI_level': aqi_order})
+                     title='AQI Category Distribution by Station (%)',
+                     labels={'percentage': 'Percentage (%)', 'station': 'Station'},
+                     color_discrete_map={
+                         'Excellent': '#00e400',
+                         'Good': '#ffff00',
+                         'Lightly Polluted': '#ff7e00',
+                         'Moderately Polluted': '#ff0000',
+                         'Heavily Polluted': '#8f3f97',
+                         'Severely Polluted': '#7e0023'
+                     },
+                     category_orders={'AQI_level': aqi_order})
         fig.update_layout(barmode='stack')
         st.plotly_chart(fig, use_container_width=True)
 
