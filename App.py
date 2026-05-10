@@ -25,10 +25,26 @@ def load_data():
 
 @st.cache_resource
 def load_model():
-    with open('best_model.pkl', 'rb') as f:
-        model = pickle.load(f)
-    with open('scaler.pkl', 'rb') as f:
-        scaler = pickle.load(f)
+    from sklearn.ensemble import RandomForestRegressor
+    from sklearn.preprocessing import StandardScaler
+    
+    data = load_data().copy()
+    data['station_type_encoded'] = (data['station_type'] == 'Urban').astype(int)
+    
+    features = ['SO2', 'NO2', 'CO', 'O3', 'TEMP', 'PRES', 'DEWP', 'RAIN', 
+                'WSPM', 'hour', 'month', 'station_type_encoded']
+    
+    X = data[features].dropna()
+    y = data.loc[X.index, 'PM2.5']
+    
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+    
+    model = RandomForestRegressor(
+        n_estimators=200, max_depth=20, 
+        min_samples_split=2, random_state=42
+    )
+    model.fit(X_scaled, y)
     return model, scaler
 
 df = load_data()
