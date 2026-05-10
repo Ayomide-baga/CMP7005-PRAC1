@@ -383,7 +383,7 @@ elif page == "Visualisation":
         aqi_order = ['Excellent', 'Good', 'Lightly Polluted', 'Moderately Polluted',
                      'Heavily Polluted', 'Severely Polluted']
         aqi_ct = pd.crosstab(df['station'], df['AQI_level'], normalize='index') * 100
-        aqi_ct = aqi_ct.reindex(columns=aqi_order)
+        aqi_ct = aqi_ct.reindex(columns=[c for c in aqi_order if c in aqi_ct.columns])
         
         fig, ax = plt.subplots(figsize=(10, 6))
         aqi_ct.plot(kind='bar', stacked=True, colormap='RdYlGn_r', 
