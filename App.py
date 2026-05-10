@@ -34,19 +34,22 @@ def load_model():
     features = ['SO2', 'NO2', 'CO', 'O3', 'TEMP', 'PRES', 'DEWP', 'RAIN', 
                 'WSPM', 'hour', 'month', 'station_type_encoded']
     
-    X = data[features].dropna()
-    y = data.loc[X.index, 'PM2.5']
+    
+    model_df = data[features + ['PM2.5']].dropna()
+    
+    X = model_df[features]
+    y = model_df['PM2.5']
     
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
     
     model = RandomForestRegressor(
-        n_estimators=200, max_depth=20, 
+        n_estimators=200, max_depth=20,
         min_samples_split=2, random_state=42
     )
     model.fit(X_scaled, y)
     return model, scaler
-
+    
 df = load_data()
 model, scaler = load_model()
 
