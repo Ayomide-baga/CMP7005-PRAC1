@@ -237,11 +237,11 @@ elif page == "Dataset Explorer":
     st.dataframe(filtered_df.head(100), use_container_width=True)
     csv = filtered_df.to_csv().encode('utf-8')
     st.download_button(
-    label="📥 Download Filtered Data as CSV",
-    data=csv,
-    file_name="beijing_air_quality_filtered.csv",
-    mime="text/csv"
-    
+        label="📥 Download Filtered Data as CSV",
+        data=csv,
+        file_name="beijing_air_quality_filtered.csv",
+        mime="text/csv"
+    )
     # Summary statistics
     st.markdown("### Summary Statistics")
     st.dataframe(filtered_df[pollutants + met_vars].describe().round(2), 
