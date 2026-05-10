@@ -170,8 +170,8 @@ elif page == "Dataset Explorer":
     aqi_counts = aqi_counts.reindex(aqi_order).dropna()
     
     fig = px.pie(values=aqi_counts.values, names=aqi_counts.index,
-                 title='AQI Category Distribution',
-                 color_discrete_sequence=px.colors.sequential.RdYlGn_r)
+             title='AQI Category Distribution',
+             color_discrete_sequence=['#00e400', '#ffff00', '#ff7e00', '#ff0000', '#8f3f97', '#7e0023'])
     st.plotly_chart(fig, use_container_width=True)
 
 # ============================================================
