@@ -72,33 +72,106 @@ st.sidebar.markdown("Student ID: ST20349610")
 # HOME PAGE
 # ============================================================
 if page == "Home":
-    st.title("Beijing Air Quality Analysis")
-    st.markdown("### From Data to Application Development")
-    
+    # ── Hero Banner ──────────────────────────────────────────
     st.markdown("""
-    This application provides an interactive platform for exploring air quality 
-    data from four monitoring stations in Beijing (March 2013 – February 2017). 
-    It enables users to examine the dataset, visualise pollution patterns, and 
-    generate PM2.5 predictions using a trained machine learning model.
-    """)
-    
+    <div style="background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%); 
+                padding: 40px; border-radius: 15px; margin-bottom: 25px;
+                border-left: 5px solid #63b3ed;">
+        <h1 style="color: #63b3ed; margin:0; font-size: 2.5em;">🌍 Beijing Air Quality Analysis</h1>
+        <p style="color: #a0aec0; font-size: 1.1em; margin-top: 10px;">
+            From Data to Application Development · CMP7005 PRAC1
+        </p>
+        <p style="color: #cbd5e0; margin-top: 10px;">
+            Interactive exploration of hourly air quality data from four monitoring 
+            stations across Beijing's urban-suburban gradient (March 2013 – February 2017).
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ── Better Metric Cards ──────────────────────────────────
+    st.markdown("### 📊 Dataset Overview")
     col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Total Records", f"{len(df):,}")
-    col2.metric("Stations", df['station'].nunique())
-    col3.metric("Date Range", "2013-2017")
-    col4.metric("Mean PM2.5", f"{df['PM2.5'].mean():.1f} µg/m³")
-    
+
+    mean_pm25 = df['PM2.5'].mean()
+    if mean_pm25 <= 35:
+        pm_color = "#00e400"
+        pm_status = "Good"
+    elif mean_pm25 <= 75:
+        pm_color = "#ffff00"
+        pm_status = "Moderate"
+    elif mean_pm25 <= 115:
+        pm_color = "#ff7e00"
+        pm_status = "Unhealthy"
+    else:
+        pm_color = "#ff0000"
+        pm_status = "Very Unhealthy"
+
+    col1.metric("📁 Total Records", f"{len(df):,}")
+    col2.metric("📍 Stations", df['station'].nunique())
+    col3.metric("📅 Date Range", "2013–2017")
+    col4.metric("💨 Mean PM2.5", f"{mean_pm25:.1f} µg/m³", delta=pm_status)
+
+    # ── Quick Stats Row ──────────────────────────────────────
+    st.markdown("### ⚡ Quick Insights")
+    col1, col2, col3, col4 = st.columns(4)
+
+    worst_station = df.groupby('station')['PM2.5'].mean().idxmax()
+    best_station = df.groupby('station')['PM2.5'].mean().idxmin()
+    worst_month = df.groupby(df.index.month)['PM2.5'].mean().idxmax()
+    best_month = df.groupby(df.index.month)['PM2.5'].mean().idxmin()
+    month_names = {1:'January',2:'February',3:'March',4:'April',5:'May',6:'June',
+                   7:'July',8:'August',9:'September',10:'October',11:'November',12:'December'}
+
+    col1.metric("🏭 Most Polluted Station", worst_station)
+    col2.metric("🌿 Cleanest Station", best_station)
+    col3.metric("❄️ Worst Month", month_names[worst_month])
+    col4.metric("☀️ Best Month", month_names[best_month])
+
+    # ── Pollution Level Legend ───────────────────────────────
+    st.markdown("### 🎨 PM2.5 Air Quality Index")
+    cols = st.columns(6)
+    levels = [
+        ("Excellent", "≤35", "#00e400"),
+        ("Good", "≤75", "#ffff00"),
+        ("Lightly Polluted", "≤115", "#ff7e00"),
+        ("Moderately Polluted", "≤150", "#ff0000"),
+        ("Heavily Polluted", "≤250", "#8f3f97"),
+        ("Severely Polluted", ">250", "#7e0023"),
+    ]
+    for col, (label, threshold, color) in zip(cols, levels):
+        col.markdown(f"""
+        <div style="background-color: {color}22; border-left: 4px solid {color}; 
+                    padding: 10px; border-radius: 5px; text-align:center;">
+            <div style="color: {color}; font-weight: bold; font-size:0.85em;">{label}</div>
+            <div style="color: #a0aec0; font-size:0.8em;">{threshold} µg/m³</div>
+        </div>
+        """, unsafe_allow_html=True)
+
     st.markdown("---")
-    st.markdown("#### How to Use")
-    st.markdown("""
-    Use the sidebar to navigate between sections:
-    
-    - **Dataset Explorer** — Browse, filter, and examine the raw and processed data
-    - **Visualisation** — Interactive charts exploring pollutant distributions, 
-      station comparisons, correlations, and temporal patterns
-    - **Model Outputs** — View model performance metrics, feature importance, 
-      and generate PM2.5 predictions with custom inputs
-    """)
+
+    # ── About the Data ───────────────────────────────────────
+    with st.expander("📂 About the Data"):
+        st.markdown("""
+        **Source:** Beijing Multi-Site Air Quality Dataset (UCI Machine Learning Repository)
+        
+        | Station | Type | Location |
+        |---------|------|----------|
+        | Dongsi | 🏙️ Urban | Inner Beijing |
+        | Tiantan | 🏙️ Urban | Inner Beijing |
+        | Dingling | 🌿 Suburban | Northern outskirts |
+        | Huairou | 🌿 Suburban | Northern outskirts |
+        
+        **Pollutants measured:** PM2.5, PM10, SO2, NO2, CO, O3  
+        **Meteorological variables:** Temperature, Pressure, Dew Point, Rainfall, Wind Speed  
+        **Period:** March 2013 – February 2017 (hourly records)
+        """)
+
+    # ── How to Use ───────────────────────────────────────────
+    st.markdown("### 🧭 How to Use")
+    col1, col2, col3 = st.columns(3)
+    col1.info("**📊 Dataset Explorer**\nBrowse, filter, and examine the raw and processed data by station, type, and date range.")
+    col2.info("**📈 Visualisation**\nInteractive charts exploring pollutant distributions, correlations, and temporal patterns.")
+    col3.info("**🤖 Model Outputs**\nView model performance, feature importance, and generate live PM2.5 predictions.")
 
 # ============================================================
 # DATASET EXPLORER
