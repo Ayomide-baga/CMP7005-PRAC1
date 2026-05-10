@@ -193,10 +193,11 @@ if page == "Home":
 # DATASET EXPLORER
 # ============================================================
 elif page == "Dataset Explorer":
-    st.title("Dataset Explorer")
-    
+    st.title("📊 Dataset Explorer")
+    st.info("💡 Use the filters below to explore the dataset by station, type, and date range. The table shows the first 100 rows of your filtered selection.")
+
     # Filters
-    st.markdown("### Filters")
+    st.markdown("### 🔍 Filters")
     col1, col2, col3 = st.columns(3)
     
     with col1:
@@ -214,11 +215,14 @@ elif page == "Dataset Explorer":
         )
     
     with col3:
+        min_date = pd.Timestamp('2013-03-01').date()
+        max_date = pd.Timestamp('2017-02-28').date()
         date_range = st.date_input(
             "Date Range:",
-            value=(df.index.min().date(), df.index.max().date()),
-            min_value=df.index.min().date(),
-            max_value=df.index.max().date()
+            value=(min_date, max_date),
+            min_value=min_date,
+            max_value=max_date,
+            format="YYYY/MM/DD"
         )
     
     # Apply filters
@@ -233,8 +237,10 @@ elif page == "Dataset Explorer":
             (filtered_df.index.date <= date_range[1])
         ]
     
-    st.markdown(f"### Filtered Dataset ({len(filtered_df):,} records)")
+    st.markdown(f"### 📋 Filtered Dataset ({len(filtered_df):,} records)")
+    st.info("💡 Showing the first 100 rows of the filtered dataset. Use the download button below to export the full filtered dataset.")
     st.dataframe(filtered_df.head(100), use_container_width=True)
+    
     csv = filtered_df.to_csv().encode('utf-8')
     st.download_button(
         label="📥 Download Filtered Data as CSV",
@@ -242,13 +248,14 @@ elif page == "Dataset Explorer":
         file_name="beijing_air_quality_filtered.csv",
         mime="text/csv"
     )
-    # Summary statistics
-    st.markdown("### Summary Statistics")
+    
+    st.markdown("### 📈 Summary Statistics")
+    st.info("💡 Descriptive statistics for pollutants and meteorological variables in the filtered dataset. Includes mean, standard deviation, min, max and quartile values.")
     st.dataframe(filtered_df[pollutants + met_vars].describe().round(2), 
                  use_container_width=True)
     
-    # Missing values (from original data before imputation)
-    st.markdown("### Station Summary")
+    st.markdown("### 🏭 Station Summary")
+    st.info("💡 Average PM2.5 and AQI statistics grouped by station, allowing comparison of pollution levels across the four monitoring sites.")
     station_summary = filtered_df.groupby('station').agg({
         'PM2.5': ['mean', 'std', 'min', 'max'],
         'AQI': ['mean', 'std']
@@ -257,8 +264,8 @@ elif page == "Dataset Explorer":
                                 'AQI Mean', 'AQI Std']
     st.dataframe(station_summary, use_container_width=True)
     
-    # AQI distribution
-    st.markdown("### AQI Category Distribution")
+    st.markdown("### 🥧 AQI Category Distribution")
+    st.info("💡 Proportion of hourly readings falling into each AQI category for the filtered selection. A larger green slice indicates better overall air quality.")
     aqi_counts = filtered_df['AQI_level'].value_counts()
     aqi_order = ['Excellent', 'Good', 'Lightly Polluted', 'Moderately Polluted',
                  'Heavily Polluted', 'Severely Polluted']
@@ -268,7 +275,6 @@ elif page == "Dataset Explorer":
              title='AQI Category Distribution',
              color_discrete_sequence=['#00e400', '#ffff00', '#ff7e00', '#ff0000', '#8f3f97', '#7e0023'])
     st.plotly_chart(fig, use_container_width=True)
-
 # ============================================================
 # VISUALISATION
 # ============================================================
