@@ -94,7 +94,7 @@ if page == "Home":
                 border-left: 5px solid #63b3ed;">
         <h1 style="color: #63b3ed; margin:0; font-size: 2.5em;">🌍 Beijing Air Quality Analysis</h1>
         <p style="color: #a0aec0; font-size: 1.1em; margin-top: 10px;">
-            From Data to Application Development · CMP7005 PRAC1
+           Exploratory Analysis, Predictive Modelling & Interactive Visualisation · CMP7005 PRAC1
         </p>
         <p style="color: #cbd5e0; margin-top: 10px;">
             Interactive exploration of hourly air quality data from four monitoring 
