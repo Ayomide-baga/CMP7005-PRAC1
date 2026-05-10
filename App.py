@@ -324,7 +324,6 @@ elif page == "Model Outputs":
     
     if model_tab == "Performance Summary":
         st.markdown("### Model Performance Comparison")
-        
         results = pd.DataFrame({
             'Model': ['Linear Regression', 'Random Forest (Default)', 'Random Forest (Optimised)'],
             'RMSE (µg/m³)': [44.07, 28.61, 26.29],
@@ -332,156 +331,115 @@ elif page == "Model Outputs":
             'R²': [0.6881, 0.8686, 0.8891]
         })
         st.dataframe(results, use_container_width=True)
-        
         st.markdown("### Key Findings")
         st.markdown("""
-        - The optimised Random Forest achieves **R² = 0.8891**, explaining 88.9% 
-          of PM2.5 variability.
-        - RMSE of **26.29 µg/m³** represents a 40.4% improvement over Linear 
-          Regression (44.07 µg/m³).
-        - Hyperparameter optimisation (200 trees, max depth 20) improved R² 
-          from 0.8686 to 0.8891.
+        - The optimised Random Forest achieves **R² = 0.8891**, explaining 88.9% of PM2.5 variability.
+        - RMSE of **26.29 µg/m³** represents a 40.4% improvement over Linear Regression (44.07 µg/m³).
+        - Hyperparameter optimisation (200 trees, max depth 20) improved R² from 0.8686 to 0.8891.
         """)
-        
         st.markdown("### Best Model Parameters")
         params = {
             'Parameter': ['n_estimators', 'max_depth', 'min_samples_split', 'random_state'],
             'Value': [200, 20, 2, 42]
         }
         st.dataframe(pd.DataFrame(params), use_container_width=True)
-    
+
     elif model_tab == "Feature Importance":
         st.markdown("### Feature Importance — Optimised Random Forest")
-        
         importance_data = pd.DataFrame({
-            'Feature': ['CO', 'DEWP', 'NO2', 'SO2', 'month', 'TEMP', 'O3', 'PRES', 
+            'Feature': ['CO', 'DEWP', 'NO2', 'SO2', 'month', 'TEMP', 'O3', 'PRES',
                         'hour', 'WSPM', 'station_type', 'RAIN'],
-            'Importance': [0.6858, 0.0777, 0.0572, 0.0352, 0.0311, 0.0293, 0.0288, 
+            'Importance': [0.6858, 0.0777, 0.0572, 0.0352, 0.0311, 0.0293, 0.0288,
                           0.0271, 0.0104, 0.0077, 0.0073, 0.0024]
         })
-        
         fig = px.bar(importance_data, x='Importance', y='Feature', orientation='h',
                      title='Feature Importance Ranking',
                      color='Importance', color_continuous_scale='viridis')
         fig.update_layout(yaxis={'categoryorder': 'total ascending'})
         st.plotly_chart(fig, use_container_width=True)
-        
         st.markdown("""
         **CO dominates** with 0.6858 importance, confirming that shared combustion 
         sources are the primary driver of PM2.5 variability. DEWP (0.0777) and 
         NO2 (0.0572) rank second and third.
         """)
-    
+
     elif model_tab == "PM2.5 Prediction Tool":
         st.markdown("### PM2.5 Prediction Tool")
         st.markdown("Adjust the input values below to generate a PM2.5 prediction:")
-        
         col1, col2, col3 = st.columns(3)
-        
         with col1:
             so2 = st.slider("SO2 (µg/m³)", 0.0, 200.0, 14.0)
             no2 = st.slider("NO2 (µg/m³)", 0.0, 200.0, 42.0)
             co = st.slider("CO (µg/m³)", 100.0, 10000.0, 1150.0)
             o3 = st.slider("O3 (µg/m³)", 0.0, 500.0, 62.0)
-        
         with col2:
             temp = st.slider("Temperature (°C)", -20.0, 42.0, 13.0)
             pres = st.slider("Pressure (hPa)", 982.0, 1042.0, 1010.0)
             dewp = st.slider("Dew Point (°C)", -44.0, 30.0, 2.0)
             rain = st.slider("Rainfall (mm)", 0.0, 50.0, 0.0)
-        
         with col3:
             wspm = st.slider("Wind Speed (m/s)", 0.0, 13.0, 1.8)
             hour = st.slider("Hour of Day", 0, 23, 12)
             month = st.slider("Month", 1, 12, 6)
             station_type = st.selectbox("Station Type", ["Urban", "Suburban"])
-        
         station_encoded = 1 if station_type == "Urban" else 0
-        
-        # Prepare input
-        features = ['SO2', 'NO2', 'CO', 'O3', 'TEMP', 'PRES', 'DEWP', 'RAIN', 
+        features = ['SO2', 'NO2', 'CO', 'O3', 'TEMP', 'PRES', 'DEWP', 'RAIN',
                     'WSPM', 'hour', 'month', 'station_type_encoded']
-        input_data = np.array([[so2, no2, co, o3, temp, pres, dewp, rain, 
+        input_data = np.array([[so2, no2, co, o3, temp, pres, dewp, rain,
                                 wspm, hour, month, station_encoded]])
         input_scaled = scaler.transform(input_data)
-        
-        # Predict
         prediction = model.predict(input_scaled)[0]
-        
-        # Determine AQI level
         if prediction <= 35:
             aqi_level = "Excellent"
-            color = "green"
         elif prediction <= 75:
             aqi_level = "Good"
-            color = "green"
         elif prediction <= 115:
             aqi_level = "Lightly Polluted"
-            color = "orange"
         elif prediction <= 150:
             aqi_level = "Moderately Polluted"
-            color = "orange"
         elif prediction <= 250:
             aqi_level = "Heavily Polluted"
-            color = "red"
         else:
             aqi_level = "Severely Polluted"
-            color = "red"
-        
         st.markdown("---")
         st.markdown("### Prediction Result")
-        
         col1, col2 = st.columns(2)
         col1.metric("Predicted PM2.5", f"{prediction:.1f} µg/m³")
         col2.metric("AQI Category", aqi_level)
-        
         if prediction > 75:
             st.warning(f"PM2.5 level is {aqi_level}. Health precautions may be advisable.")
         else:
             st.success(f"PM2.5 level is {aqi_level}. Air quality is acceptable.")
+
     elif model_tab == "Actual vs Predicted":
         st.markdown("### Actual vs Predicted PM2.5")
-    
-    from sklearn.model_selection import train_test_split
-    
-    data = df.copy()
-    data['station_type_encoded'] = (data['station_type'] == 'Urban').astype(int)
-    features = ['SO2', 'NO2', 'CO', 'O3', 'TEMP', 'PRES', 'DEWP', 'RAIN', 
-                'WSPM', 'hour', 'month', 'station_type_encoded']
-    
-    model_df = data[features + ['PM2.5']].dropna()
-    X = model_df[features]
-    y = model_df['PM2.5']
-    
-    _, X_test, _, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    X_test_scaled = scaler.transform(X_test)
-    y_pred = model.predict(X_test_scaled)
-    
-    results_df = pd.DataFrame({'Actual': y_test.values, 'Predicted': y_pred})
-    sample = results_df.sample(2000, random_state=42)
-    
-    fig = px.scatter(sample, x='Actual', y='Predicted',
-                     opacity=0.4,
-                     title='Actual vs Predicted PM2.5 (Test Set Sample)',
-                     labels={'Actual': 'Actual PM2.5 (µg/m³)', 
-                             'Predicted': 'Predicted PM2.5 (µg/m³)'})
-    
-    # Perfect prediction line
-    max_val = max(sample['Actual'].max(), sample['Predicted'].max())
-    fig.add_shape(type='line', x0=0, y0=0, x1=max_val, y1=max_val,
-                  line=dict(color='red', dash='dash'))
-    
-    st.plotly_chart(fig, use_container_width=True)
-    st.caption("Red dashed line = perfect prediction. Points closer to the line = better accuracy.")
-    
-    col1, col2, col3 = st.columns(3)
-    from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-    rmse = np.sqrt(mean_squared_error(y_test, y_pred))
-    mae = mean_absolute_error(y_test, y_pred)
-    r2 = r2_score(y_test, y_pred)
-    col1.metric("RMSE", f"{rmse:.2f} µg/m³")
-    col2.metric("MAE", f"{mae:.2f} µg/m³")
-    col3.metric("R²", f"{r2:.4f}")
+        from sklearn.model_selection import train_test_split
+        from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+        data = df.copy()
+        data['station_type_encoded'] = (data['station_type'] == 'Urban').astype(int)
+        features = ['SO2', 'NO2', 'CO', 'O3', 'TEMP', 'PRES', 'DEWP', 'RAIN',
+                    'WSPM', 'hour', 'month', 'station_type_encoded']
+        model_df = data[features + ['PM2.5']].dropna()
+        X = model_df[features]
+        y = model_df['PM2.5']
+        _, X_test, _, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        X_test_scaled = scaler.transform(X_test)
+        y_pred = model.predict(X_test_scaled)
+        results_df = pd.DataFrame({'Actual': y_test.values, 'Predicted': y_pred})
+        sample = results_df.sample(2000, random_state=42)
+        fig = px.scatter(sample, x='Actual', y='Predicted', opacity=0.4,
+                         title='Actual vs Predicted PM2.5 (Test Set Sample)',
+                         labels={'Actual': 'Actual PM2.5 (µg/m³)',
+                                 'Predicted': 'Predicted PM2.5 (µg/m³)'})
+        max_val = max(sample['Actual'].max(), sample['Predicted'].max())
+        fig.add_shape(type='line', x0=0, y0=0, x1=max_val, y1=max_val,
+                      line=dict(color='red', dash='dash'))
+        st.plotly_chart(fig, use_container_width=True)
+        st.caption("Red dashed line = perfect prediction. Points closer to the line = better accuracy.")
+        col1, col2, col3 = st.columns(3)
+        col1.metric("RMSE", f"{np.sqrt(mean_squared_error(y_test, y_pred)):.2f} µg/m³")
+        col2.metric("MAE", f"{mean_absolute_error(y_test, y_pred):.2f} µg/m³")
+        col3.metric("R²", f"{r2_score(y_test, y_pred):.4f}")
 
     elif model_tab == "Residual Analysis":
         st.markdown("### Residual Analysis")
