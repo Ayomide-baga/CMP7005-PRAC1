@@ -422,7 +422,8 @@ elif page == "Model Outputs":
         "Feature Importance",
         "PM2.5 Prediction Tool",
         "Actual vs Predicted",
-        "Residual Analysis"
+        "Residual Analysis",
+        "Batch Prediction"
     ])
     
     if model_tab == "Performance Summary":
@@ -571,3 +572,94 @@ elif page == "Model Outputs":
         fig2.add_vline(x=0, line_dash='dash', line_color='red')
         st.plotly_chart(fig2, use_container_width=True)
         st.caption("A bell curve centred near 0 indicates unbiased predictions.")
+    elif model_tab == "Batch Prediction":
+        st.markdown("### Batch Prediction from Uploaded CSV")
+        st.markdown("Upload a CSV file with air quality readings to get PM2.5 predictions.")
+    
+    
+        template_data = pd.DataFrame({
+            'SO2': [14.0], 'NO2': [42.0], 'CO': [1150.0], 'O3': [62.0],
+            'TEMP': [13.0], 'PRES': [1010.0], 'DEWP': [2.0], 'RAIN': [0.0],
+            'WSPM': [1.8], 'hour': [12], 'month': [6], 'station_type': ['Urban']
+        })
+        template_csv = template_data.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="📥 Download CSV Template",
+            data=template_csv,
+            file_name="prediction_template.csv",
+            mime="text/csv"
+         )
+    
+        st.markdown("---")
+        uploaded_file = st.file_uploader("Upload your CSV file:", type="csv")
+    
+        if uploaded_file is not None:
+            try:
+               input_df = pd.read_csv(uploaded_file)
+               st.markdown("#### Uploaded Data Preview")
+               st.dataframe(input_df.head(), use_container_width=True)
+            
+            
+               required_cols = ['SO2', 'NO2', 'CO', 'O3', 'TEMP', 'PRES', 
+                           'DEWP', 'RAIN', 'WSPM', 'hour', 'month', 'station_type']
+               missing_cols = [c for c in required_cols if c not in input_df.columns]
+            
+               if missing_cols:
+                   st.error(f"Missing columns: {', '.join(missing_cols)}. Please use the template.")
+               else:
+                   input_df['station_type_encoded'] = (input_df['station_type'] == 'Urban').astype(int)
+                
+                   features = ['SO2', 'NO2', 'CO', 'O3', 'TEMP', 'PRES', 'DEWP', 
+                           'RAIN', 'WSPM', 'hour', 'month', 'station_type_encoded']
+                
+                   X_new = input_df[features].dropna()
+                   X_scaled = scaler.transform(X_new)
+                   predictions = model.predict(X_scaled)
+                
+                
+                   input_df.loc[X_new.index, 'Predicted_PM2.5'] = predictions.round(2)
+                
+               
+                   def get_aqi_level(pm):
+                       if pm <= 35: return 'Excellent'
+                       elif pm <= 75: return 'Good'
+                       elif pm <= 115: return 'Lightly Polluted'
+                       elif pm <= 150: return 'Moderately Polluted'
+                       elif pm <= 250: return 'Heavily Polluted'
+                       else: return 'Severely Polluted'
+                
+                   input_df['AQI_Category'] = input_df['Predicted_PM2.5'].apply(get_aqi_level)
+                
+                   st.markdown("#### Prediction Results")
+                   st.dataframe(input_df[['SO2', 'NO2', 'CO', 'O3', 'TEMP', 
+                                       'station_type', 'Predicted_PM2.5', 
+                                       'AQI_Category']], 
+                            use_container_width=True)
+                
+                
+                   col1, col2, col3 = st.columns(3)
+                   col1.metric("Total Predictions", len(predictions))
+                   col2.metric("Mean Predicted PM2.5", f"{predictions.mean():.1f} µg/m³")
+                   col3.metric("Max Predicted PM2.5", f"{predictions.max():.1f} µg/m³")
+                
+                   
+                   fig = px.histogram(x=predictions, nbins=30,
+                                  title='Distribution of Predicted PM2.5 Values',
+                                  labels={'x': 'Predicted PM2.5 (µg/m³)', 'y': 'Count'})
+                   st.plotly_chart(fig, use_container_width=True)
+                
+                
+                   result_csv = input_df.to_csv(index=False).encode('utf-8')
+                   st.download_button(
+                       label="📥 Download Predictions as CSV",
+                       data=result_csv,
+                       file_name="pm25_predictions.csv",
+                       mime="text/csv"
+                    )
+                
+             except Exception as e:
+                  st.error(f"Error processing file. Please check your CSV format and try again.")
+    else:
+        st.info("👆 Upload a CSV file above to get started, or download the template first.")
+
+
