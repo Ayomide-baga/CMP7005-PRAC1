@@ -483,38 +483,30 @@ elif page == "Model Outputs":
     col2.metric("MAE", f"{mae:.2f} µg/m³")
     col3.metric("R²", f"{r2:.4f}")
 
-elif model_tab == "Residual Analysis":
-    st.markdown("### Residual Analysis")
-    
-    from sklearn.model_selection import train_test_split
-    
-    data = df.copy()
-    data['station_type_encoded'] = (data['station_type'] == 'Urban').astype(int)
-    features = ['SO2', 'NO2', 'CO', 'O3', 'TEMP', 'PRES', 'DEWP', 'RAIN', 
-                'WSPM', 'hour', 'month', 'station_type_encoded']
-    
-    model_df = data[features + ['PM2.5']].dropna()
-    X = model_df[features]
-    y = model_df['PM2.5']
-    
-    _, X_test, _, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    X_test_scaled = scaler.transform(X_test)
-    y_pred = model.predict(X_test_scaled)
-    residuals = y_test.values - y_pred
-    
-    # Residuals vs Predicted
-    fig1 = px.scatter(x=y_pred, y=residuals, opacity=0.4,
-                      title='Residuals vs Predicted Values',
-                      labels={'x': 'Predicted PM2.5 (µg/m³)', 
-                              'y': 'Residual (Actual − Predicted)'})
-    fig1.add_hline(y=0, line_dash='dash', line_color='red')
-    st.plotly_chart(fig1, use_container_width=True)
-    st.caption("Points scattered randomly around 0 = good model. Patterns suggest bias.")
-    
-    # Residual distribution
-    fig2 = px.histogram(x=residuals, nbins=80,
-                        title='Residual Distribution',
-                        labels={'x': 'Residual (µg/m³)', 'y': 'Count'})
-    fig2.add_vline(x=0, line_dash='dash', line_color='red')
-    st.plotly_chart(fig2, use_container_width=True)
-    st.caption("A bell curve centred near 0 indicates unbiased predictions.")
+    elif model_tab == "Residual Analysis":
+        st.markdown("### Residual Analysis")
+        from sklearn.model_selection import train_test_split
+        data = df.copy()
+        data['station_type_encoded'] = (data['station_type'] == 'Urban').astype(int)
+        features = ['SO2', 'NO2', 'CO', 'O3', 'TEMP', 'PRES', 'DEWP', 'RAIN',
+                    'WSPM', 'hour', 'month', 'station_type_encoded']
+        model_df = data[features + ['PM2.5']].dropna()
+        X = model_df[features]
+        y = model_df['PM2.5']
+        _, X_test, _, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        X_test_scaled = scaler.transform(X_test)
+        y_pred = model.predict(X_test_scaled)
+        residuals = y_test.values - y_pred
+        fig1 = px.scatter(x=y_pred, y=residuals, opacity=0.4,
+                          title='Residuals vs Predicted Values',
+                          labels={'x': 'Predicted PM2.5 (µg/m³)',
+                                  'y': 'Residual (Actual − Predicted)'})
+        fig1.add_hline(y=0, line_dash='dash', line_color='red')
+        st.plotly_chart(fig1, use_container_width=True)
+        st.caption("Points scattered randomly around 0 = good model. Patterns suggest bias.")
+        fig2 = px.histogram(x=residuals, nbins=80,
+                            title='Residual Distribution',
+                            labels={'x': 'Residual (µg/m³)', 'y': 'Count'})
+        fig2.add_vline(x=0, line_dash='dash', line_color='red')
+        st.plotly_chart(fig2, use_container_width=True)
+        st.caption("A bell curve centred near 0 indicates unbiased predictions.")
