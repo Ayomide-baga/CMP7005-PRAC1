@@ -657,7 +657,7 @@ elif page == "Model Outputs":
                        mime="text/csv"
                     )
                 
-             except Exception as e:
+            except Exception as e:
                  st.error(f"Error processing file. Please check your CSV format and try again.")
     else:
         st.info("👆 Upload a CSV file above to get started, or download the template first.")
