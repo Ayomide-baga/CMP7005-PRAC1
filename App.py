@@ -440,7 +440,7 @@ elif page == "Model Outputs":
         else:
             st.success(f"PM2.5 level is {aqi_level}. Air quality is acceptable.")
     elif model_tab == "Actual vs Predicted":
-    st.markdown("### Actual vs Predicted PM2.5")
+        st.markdown("### Actual vs Predicted PM2.5")
     
     from sklearn.model_selection import train_test_split
     
