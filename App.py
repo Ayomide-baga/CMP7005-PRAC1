@@ -317,7 +317,9 @@ elif page == "Model Outputs":
     model_tab = st.selectbox("Select View:", [
         "Performance Summary",
         "Feature Importance",
-        "PM2.5 Prediction Tool"
+        "PM2.5 Prediction Tool",
+        "Actual vs Predicted",
+        "Residual Analysis"
     ])
     
     if model_tab == "Performance Summary":
@@ -437,3 +439,82 @@ elif page == "Model Outputs":
             st.warning(f"PM2.5 level is {aqi_level}. Health precautions may be advisable.")
         else:
             st.success(f"PM2.5 level is {aqi_level}. Air quality is acceptable.")
+            elif model_tab == "Actual vs Predicted":
+    st.markdown("### Actual vs Predicted PM2.5")
+    
+    from sklearn.model_selection import train_test_split
+    
+    data = df.copy()
+    data['station_type_encoded'] = (data['station_type'] == 'Urban').astype(int)
+    features = ['SO2', 'NO2', 'CO', 'O3', 'TEMP', 'PRES', 'DEWP', 'RAIN', 
+                'WSPM', 'hour', 'month', 'station_type_encoded']
+    
+    model_df = data[features + ['PM2.5']].dropna()
+    X = model_df[features]
+    y = model_df['PM2.5']
+    
+    _, X_test, _, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_test_scaled = scaler.transform(X_test)
+    y_pred = model.predict(X_test_scaled)
+    
+    results_df = pd.DataFrame({'Actual': y_test.values, 'Predicted': y_pred})
+    sample = results_df.sample(2000, random_state=42)
+    
+    fig = px.scatter(sample, x='Actual', y='Predicted',
+                     opacity=0.4,
+                     title='Actual vs Predicted PM2.5 (Test Set Sample)',
+                     labels={'Actual': 'Actual PM2.5 (µg/m³)', 
+                             'Predicted': 'Predicted PM2.5 (µg/m³)'})
+    
+    # Perfect prediction line
+    max_val = max(sample['Actual'].max(), sample['Predicted'].max())
+    fig.add_shape(type='line', x0=0, y0=0, x1=max_val, y1=max_val,
+                  line=dict(color='red', dash='dash'))
+    
+    st.plotly_chart(fig, use_container_width=True)
+    st.caption("Red dashed line = perfect prediction. Points closer to the line = better accuracy.")
+    
+    col1, col2, col3 = st.columns(3)
+    from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+    rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+    mae = mean_absolute_error(y_test, y_pred)
+    r2 = r2_score(y_test, y_pred)
+    col1.metric("RMSE", f"{rmse:.2f} µg/m³")
+    col2.metric("MAE", f"{mae:.2f} µg/m³")
+    col3.metric("R²", f"{r2:.4f}")
+
+elif model_tab == "Residual Analysis":
+    st.markdown("### Residual Analysis")
+    
+    from sklearn.model_selection import train_test_split
+    
+    data = df.copy()
+    data['station_type_encoded'] = (data['station_type'] == 'Urban').astype(int)
+    features = ['SO2', 'NO2', 'CO', 'O3', 'TEMP', 'PRES', 'DEWP', 'RAIN', 
+                'WSPM', 'hour', 'month', 'station_type_encoded']
+    
+    model_df = data[features + ['PM2.5']].dropna()
+    X = model_df[features]
+    y = model_df['PM2.5']
+    
+    _, X_test, _, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_test_scaled = scaler.transform(X_test)
+    y_pred = model.predict(X_test_scaled)
+    residuals = y_test.values - y_pred
+    
+    # Residuals vs Predicted
+    fig1 = px.scatter(x=y_pred, y=residuals, opacity=0.4,
+                      title='Residuals vs Predicted Values',
+                      labels={'x': 'Predicted PM2.5 (µg/m³)', 
+                              'y': 'Residual (Actual − Predicted)'})
+    fig1.add_hline(y=0, line_dash='dash', line_color='red')
+    st.plotly_chart(fig1, use_container_width=True)
+    st.caption("Points scattered randomly around 0 = good model. Patterns suggest bias.")
+    
+    # Residual distribution
+    fig2 = px.histogram(x=residuals, nbins=80,
+                        title='Residual Distribution',
+                        labels={'x': 'Residual (µg/m³)', 'y': 'Count'})
+    fig2.add_vline(x=0, line_dash='dash', line_color='red')
+    st.plotly_chart(fig2, use_container_width=True)
+    st.caption("A bell curve centred near 0 indicates unbiased predictions.")
