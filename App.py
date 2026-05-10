@@ -429,7 +429,8 @@ elif page == "Visualisation":
 # MODEL OUTPUTS
 # ============================================================
 elif page == "Model Outputs":
-    st.title("Model Outputs")
+    st.title("🤖 Model Outputs")
+    st.info("💡 This section presents the machine learning model built to predict PM2.5 concentrations. Navigate between the tabs below to explore model performance, feature importance, and generate predictions.")
     
     model_tab = st.selectbox("Select View:", [
         "Performance Summary",
@@ -441,7 +442,8 @@ elif page == "Model Outputs":
     ])
     
     if model_tab == "Performance Summary":
-        st.markdown("### Model Performance Comparison")
+        st.markdown("### 📊 Model Performance Comparison")
+        st.info("💡 Comparison of three models evaluated on the test set. RMSE and MAE measure average prediction error in µg/m³ — lower is better. R² measures how much variance the model explains — closer to 1.0 is better.")
         results = pd.DataFrame({
             'Model': ['Linear Regression', 'Random Forest (Default)', 'Random Forest (Optimised)'],
             'RMSE (µg/m³)': [44.07, 28.61, 26.29],
@@ -449,13 +451,15 @@ elif page == "Model Outputs":
             'R²': [0.6881, 0.8686, 0.8891]
         })
         st.dataframe(results, use_container_width=True)
-        st.markdown("### Key Findings")
+        
+        st.markdown("### 🔍 Key Findings")
         st.markdown("""
         - The optimised Random Forest achieves **R² = 0.8891**, explaining 88.9% of PM2.5 variability.
         - RMSE of **26.29 µg/m³** represents a 40.4% improvement over Linear Regression (44.07 µg/m³).
         - Hyperparameter optimisation (200 trees, max depth 20) improved R² from 0.8686 to 0.8891.
         """)
-        st.markdown("### Best Model Parameters")
+        
+        st.markdown("### ⚙️ Best Model Parameters")
         params = {
             'Parameter': ['n_estimators', 'max_depth', 'min_samples_split', 'random_state'],
             'Value': [200, 20, 2, 42]
@@ -463,7 +467,8 @@ elif page == "Model Outputs":
         st.dataframe(pd.DataFrame(params), use_container_width=True)
 
     elif model_tab == "Feature Importance":
-        st.markdown("### Feature Importance — Optimised Random Forest")
+        st.markdown("### 🎯 Feature Importance — Optimised Random Forest")
+        st.info("💡 Feature importance scores show how much each variable contributes to the model's predictions. A higher score means the feature has greater influence on PM2.5 predictions. Scores sum to 1.0.")
         importance_data = pd.DataFrame({
             'Feature': ['CO', 'DEWP', 'NO2', 'SO2', 'month', 'TEMP', 'O3', 'PRES',
                         'hour', 'WSPM', 'station_type', 'RAIN'],
@@ -482,7 +487,8 @@ elif page == "Model Outputs":
         """)
 
     elif model_tab == "PM2.5 Prediction Tool":
-        st.markdown("### PM2.5 Prediction Tool")
+        st.markdown("### 🎛️ PM2.5 Prediction Tool")
+        st.info("💡 Adjust the input sliders to simulate different environmental conditions and generate a real-time PM2.5 prediction using the trained Random Forest model. The AQI category is determined based on Chinese air quality standards.")
         st.markdown("Adjust the input values below to generate a PM2.5 prediction:")
         col1, col2, col3 = st.columns(3)
         with col1:
@@ -520,7 +526,7 @@ elif page == "Model Outputs":
         else:
             aqi_level = "Severely Polluted"
         st.markdown("---")
-        st.markdown("### Prediction Result")
+        st.markdown("### 🎯 Prediction Result")
         col1, col2 = st.columns(2)
         col1.metric("Predicted PM2.5", f"{prediction:.1f} µg/m³")
         col2.metric("AQI Category", aqi_level)
@@ -530,7 +536,8 @@ elif page == "Model Outputs":
             st.success(f"PM2.5 level is {aqi_level}. Air quality is acceptable.")
 
     elif model_tab == "Actual vs Predicted":
-        st.markdown("### Actual vs Predicted PM2.5")
+        st.markdown("### 📉 Actual vs Predicted PM2.5")
+        st.info("💡 Scatter plot comparing actual PM2.5 values against model predictions on the test set (20% holdout). Points lying close to the red dashed line indicate accurate predictions. Spread away from the line represents prediction error.")
         from sklearn.model_selection import train_test_split
         from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
         data = df.copy()
@@ -560,7 +567,8 @@ elif page == "Model Outputs":
         col3.metric("R²", f"{r2_score(y_test, y_pred):.4f}")
 
     elif model_tab == "Residual Analysis":
-        st.markdown("### Residual Analysis")
+        st.markdown("### 🔬 Residual Analysis")
+        st.info("💡 Residuals are the differences between actual and predicted values. A good model should have residuals randomly scattered around zero (top chart) and follow a bell-curve distribution centred near zero (bottom chart).")
         from sklearn.model_selection import train_test_split
         data = df.copy()
         data['station_type_encoded'] = (data['station_type'] == 'Urban').astype(int)
@@ -586,11 +594,21 @@ elif page == "Model Outputs":
         fig2.add_vline(x=0, line_dash='dash', line_color='red')
         st.plotly_chart(fig2, use_container_width=True)
         st.caption("A bell curve centred near 0 indicates unbiased predictions.")
+
     elif model_tab == "Batch Prediction":
-        st.markdown("### Batch Prediction from Uploaded CSV")
-        st.markdown("Upload a CSV file with air quality readings to get PM2.5 predictions.")
-    
-    
+        st.markdown("### 📂 Batch Prediction from Uploaded CSV")
+        st.info("💡 Upload a CSV file containing multiple air quality readings to generate PM2.5 predictions for all rows at once. Download the template below to see the required format.")
+        st.warning("""
+        ⚠️ **Important Notice:** This model was trained on Beijing air quality data (2013–2017). 
+        Predictions are most accurate for similar urban/suburban environments. 
+        Results may be unreliable for significantly different geographical locations or climates.
+        """)
+        st.info("""
+        📋 **Expected value ranges for best results:**
+        - SO2: 0–200 µg/m³ | NO2: 0–200 µg/m³ | CO: 100–10,000 µg/m³ | O3: 0–500 µg/m³
+        - Temperature: -20°C to 42°C | Pressure: 982–1042 hPa | Wind Speed: 0–13 m/s
+        - Hour: 0–23 | Month: 1–12 | Station Type: Urban or Suburban
+        """)
         template_data = pd.DataFrame({
             'SO2': [14.0], 'NO2': [42.0], 'CO': [1150.0], 'O3': [62.0],
             'TEMP': [13.0], 'PRES': [1010.0], 'DEWP': [2.0], 'RAIN': [0.0],
@@ -602,78 +620,81 @@ elif page == "Model Outputs":
             data=template_csv,
             file_name="prediction_template.csv",
             mime="text/csv"
-         )
-    
+        )
         st.markdown("---")
         uploaded_file = st.file_uploader("Upload your CSV file:", type="csv")
-    
         if uploaded_file is not None:
             try:
-               input_df = pd.read_csv(uploaded_file)
-               st.markdown("#### Uploaded Data Preview")
-               st.dataframe(input_df.head(), use_container_width=True)
-            
-            
-               required_cols = ['SO2', 'NO2', 'CO', 'O3', 'TEMP', 'PRES', 
-                           'DEWP', 'RAIN', 'WSPM', 'hour', 'month', 'station_type']
-               missing_cols = [c for c in required_cols if c not in input_df.columns]
-            
-               if missing_cols:
-                   st.error(f"Missing columns: {', '.join(missing_cols)}. Please use the template.")
-               else:
-                   input_df['station_type_encoded'] = (input_df['station_type'] == 'Urban').astype(int)
-                
-                   features = ['SO2', 'NO2', 'CO', 'O3', 'TEMP', 'PRES', 'DEWP', 
-                           'RAIN', 'WSPM', 'hour', 'month', 'station_type_encoded']
-                
-                   X_new = input_df[features].dropna()
-                   X_scaled = scaler.transform(X_new)
-                   predictions = model.predict(X_scaled)
-                
-                
-                   input_df.loc[X_new.index, 'Predicted_PM2.5'] = predictions.round(2)
-                
-               
-                   def get_aqi_level(pm):
-                       if pm <= 35: return 'Excellent'
-                       elif pm <= 75: return 'Good'
-                       elif pm <= 115: return 'Lightly Polluted'
-                       elif pm <= 150: return 'Moderately Polluted'
-                       elif pm <= 250: return 'Heavily Polluted'
-                       else: return 'Severely Polluted'
-                
-                   input_df['AQI_Category'] = input_df['Predicted_PM2.5'].apply(get_aqi_level)
-                
-                   st.markdown("#### Prediction Results")
-                   st.dataframe(input_df[['SO2', 'NO2', 'CO', 'O3', 'TEMP', 
-                                       'station_type', 'Predicted_PM2.5', 
-                                       'AQI_Category']], 
-                            use_container_width=True)
-                
-                
-                   col1, col2, col3 = st.columns(3)
-                   col1.metric("Total Predictions", len(predictions))
-                   col2.metric("Mean Predicted PM2.5", f"{predictions.mean():.1f} µg/m³")
-                   col3.metric("Max Predicted PM2.5", f"{predictions.max():.1f} µg/m³")
-                
-                   
-                   fig = px.histogram(x=predictions, nbins=30,
-                                  title='Distribution of Predicted PM2.5 Values',
-                                  labels={'x': 'Predicted PM2.5 (µg/m³)', 'y': 'Count'})
-                   st.plotly_chart(fig, use_container_width=True)
-                
-                
-                   result_csv = input_df.to_csv(index=False).encode('utf-8')
-                   st.download_button(
-                       label="📥 Download Predictions as CSV",
-                       data=result_csv,
-                       file_name="pm25_predictions.csv",
-                       mime="text/csv"
+                input_df = pd.read_csv(uploaded_file)
+                st.markdown("#### 👀 Uploaded Data Preview")
+                st.dataframe(input_df.head(), use_container_width=True)
+                required_cols = ['SO2', 'NO2', 'CO', 'O3', 'TEMP', 'PRES',
+                               'DEWP', 'RAIN', 'WSPM', 'hour', 'month', 'station_type']
+                missing_cols = [c for c in required_cols if c not in input_df.columns]
+                if missing_cols:
+                    st.error(f"Missing columns: {', '.join(missing_cols)}. Please use the template.")
+                else:
+                    input_df['station_type_encoded'] = (input_df['station_type'] == 'Urban').astype(int)
+                    features = ['SO2', 'NO2', 'CO', 'O3', 'TEMP', 'PRES', 'DEWP',
+                               'RAIN', 'WSPM', 'hour', 'month', 'station_type_encoded']
+                    X_new = input_df[features].dropna()
+
+                    # Validate input ranges
+                    validation_ranges = {
+                        'SO2': (0, 200), 'NO2': (0, 200), 'CO': (100, 10000),
+                        'O3': (0, 500), 'TEMP': (-20, 42), 'PRES': (982, 1042),
+                        'WSPM': (0, 13), 'hour': (0, 23), 'month': (1, 12)
+                    }
+                    warnings_list = []
+                    for col, (low, high) in validation_ranges.items():
+                        if col in X_new.columns:
+                            out_of_range = ((X_new[col] < low) | (X_new[col] > high)).sum()
+                            if out_of_range > 0:
+                                warnings_list.append(f"**{col}**: {out_of_range} row(s) outside expected range ({low}–{high})")
+                    if warnings_list:
+                        st.warning("⚠️ Some values are outside the training data range — predictions may be less accurate:\n\n" +
+                                   "\n".join(f"- {w}" for w in warnings_list))
+
+                    X_scaled = scaler.transform(X_new)
+                    predictions = model.predict(X_scaled)
+                    input_df.loc[X_new.index, 'Predicted_PM2.5'] = predictions.round(2)
+
+                    def get_aqi_level(pm):
+                        if pm <= 35: return 'Excellent'
+                        elif pm <= 75: return 'Good'
+                        elif pm <= 115: return 'Lightly Polluted'
+                        elif pm <= 150: return 'Moderately Polluted'
+                        elif pm <= 250: return 'Heavily Polluted'
+                        else: return 'Severely Polluted'
+
+                    input_df['AQI_Category'] = input_df['Predicted_PM2.5'].apply(get_aqi_level)
+
+                    st.markdown("#### 📊 Prediction Results")
+                    st.dataframe(input_df[['SO2', 'NO2', 'CO', 'O3', 'TEMP',
+                                           'station_type', 'Predicted_PM2.5',
+                                           'AQI_Category']],
+                                use_container_width=True)
+
+                    col1, col2, col3 = st.columns(3)
+                    col1.metric("Total Predictions", len(predictions))
+                    col2.metric("Mean Predicted PM2.5", f"{predictions.mean():.1f} µg/m³")
+                    col3.metric("Max Predicted PM2.5", f"{predictions.max():.1f} µg/m³")
+
+                    fig = px.histogram(x=predictions, nbins=30,
+                                      title='Distribution of Predicted PM2.5 Values',
+                                      labels={'x': 'Predicted PM2.5 (µg/m³)', 'y': 'Count'})
+                    st.plotly_chart(fig, use_container_width=True)
+
+                    result_csv = input_df.to_csv(index=False).encode('utf-8')
+                    st.download_button(
+                        label="📥 Download Predictions as CSV",
+                        data=result_csv,
+                        file_name="pm25_predictions.csv",
+                        mime="text/csv"
                     )
-                
             except Exception as e:
-                 st.error(f"Error processing file. Please check your CSV format and try again.")
-    else:
-        st.info("👆 Upload a CSV file above to get started, or download the template first.")
+                st.error("Error processing file. Please check your CSV format and try again.")
+        else:
+            st.info("👆 Upload a CSV file above to get started, or download the template first.")
 
 
