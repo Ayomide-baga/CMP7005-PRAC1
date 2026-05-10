@@ -382,19 +382,27 @@ elif page == "Visualisation":
         
         aqi_order = ['Excellent', 'Good', 'Lightly Polluted', 'Moderately Polluted',
                      'Heavily Polluted', 'Severely Polluted']
-        aqi_ct = pd.crosstab(df['station'], df['AQI_level'], normalize='index') * 100
-        aqi_ct = aqi_ct.reindex(columns=[c for c in aqi_order if c in aqi_ct.columns])
-        
-        fig, ax = plt.subplots(figsize=(10, 6))
-        aqi_ct.plot(kind='bar', stacked=True, colormap='RdYlGn_r', 
-                    edgecolor='black', linewidth=0.5, ax=ax)
-        ax.set_title('AQI Category Distribution by Station')
-        ax.set_ylabel('Percentage (%)')
-        ax.set_xlabel('Station')
-        ax.legend(title='AQI Level', bbox_to_anchor=(1.05, 1))
-        plt.xticks(rotation=0)
-        plt.tight_layout()
-        st.pyplot(fig)
+        aqi_counts = df.groupby(['station', 'AQI_level']).size().reset_index(name='count')
+        aqi_totals = aqi_counts.groupby('station')['count'].transform('sum')
+        aqi_counts['percentage'] = aqi_counts['count'] / aqi_totals * 100
+        aqi_counts['AQI_level'] = pd.Categorical(aqi_counts['AQI_level'], 
+                                              categories=aqi_order, ordered=True)
+        aqi_counts = aqi_counts.sort_values('AQI_level')
+
+        fig = px.bar(aqi_counts, x='station', y='percentage', color='AQI_level',
+                 title='AQI Category Distribution by Station (%)',
+                 labels={'percentage': 'Percentage (%)', 'station': 'Station'},
+                 color_discrete_map={
+                     'Excellent': '#00e400',
+                     'Good': '#ffff00',
+                     'Lightly Polluted': '#ff7e00',
+                     'Moderately Polluted': '#ff0000',
+                     'Heavily Polluted': '#8f3f97',
+                     'Severely Polluted': '#7e0023'
+                 },
+                 category_orders={'AQI_level': aqi_order})
+        fig.update_layout(barmode='stack')
+        st.plotly_chart(fig, use_container_width=True)
 
 # ============================================================
 # MODEL OUTPUTS
