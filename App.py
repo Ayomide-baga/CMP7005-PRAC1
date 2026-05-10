@@ -66,7 +66,8 @@ def load_model():
     return model, scaler
     
 df = load_data()
-model, scaler = load_model()
+with st.spinner("🤖 Training model on Beijing air quality data... this may take a minute on first load."):
+    model, scaler = load_model()
 
 pollutants = ['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']
 met_vars = ['TEMP', 'PRES', 'DEWP', 'RAIN', 'WSPM']
