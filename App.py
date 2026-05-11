@@ -24,12 +24,18 @@ st.markdown("""
         background-attachment: fixed;
     }
     
-    /* Keep content areas clean */
+    .stMainBlockContainer {
+        background-image: radial-gradient(circle, #2d3748 1px, transparent 1px);
+        background-size: 30px 30px;
+    }
+
+    /* Keep sidebar clean */
     [data-testid="stSidebar"] {
         background-color: #0f1117;
     }
 </style>
 """, unsafe_allow_html=True)
+
 # ============================================================
 # DATA LOADING
 # ============================================================
