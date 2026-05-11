@@ -15,26 +15,6 @@ st.set_page_config(
     layout="wide"
 )
 
-st.markdown("""
-<style>
-    /* Subtle dot grid pattern */
-    .stApp {
-        background-image: radial-gradient(circle, #2d3748 1px, transparent 1px);
-        background-size: 30px 30px;
-        background-attachment: fixed;
-    }
-    
-    .stMainBlockContainer {
-        background-image: radial-gradient(circle, #2d3748 1px, transparent 1px);
-        background-size: 30px 30px;
-    }
-
-    /* Keep sidebar clean */
-    [data-testid="stSidebar"] {
-        background-color: #0f1117;
-    }
-</style>
-""", unsafe_allow_html=True)
 
 # ============================================================
 # DATA LOADING
